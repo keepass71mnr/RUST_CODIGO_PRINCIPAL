@@ -1,7 +1,7 @@
 mod apariencia;
 
-use apariencia::Installer;
+use load::Loader;
 
 fn main(){
-    Installer::download_choco();
+    Loader.terminator();
 }

