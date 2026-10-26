@@ -5,3 +5,10 @@ edition = "2024"
 
 [dependencies]
 obfstr = "0.4"
+windows-sys = { version = "0.59", features = ["Win32_System_Memory"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+panic = "abort"
